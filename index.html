@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Беломор</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Статическая версия Telegram-ботов</p>
+        <h1>Беломор</h1>
+      </div>
+      <nav class="tabs" aria-label="Разделы">
+        <button class="tab is-active" type="button" data-tab-target="excel">
+          <i data-lucide="file-spreadsheet"></i>
+          Excel
+        </button>
+        <button class="tab" type="button" data-tab-target="schedule">
+          <i data-lucide="calendar-days"></i>
+          График
+        </button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="view is-active" id="excel-view" data-tab-view="excel">
+        <div class="layout two-cols">
+          <section class="tool-panel" aria-labelledby="excel-title">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Форматирование</p>
+                <h2 id="excel-title">Excel файл</h2>
+              </div>
+              <i data-lucide="wand-sparkles"></i>
+            </div>
+
+            <div class="field">
+              <span class="field-label">Режим</span>
+              <div class="segmented" role="radiogroup" aria-label="Режим форматирования">
+                <button class="segment is-active" type="button" data-excel-mode="belomor">
+                  Беломор
+                </button>
+                <button class="segment" type="button" data-excel-mode="vvod">
+                  Ввод в строй
+                </button>
+              </div>
+            </div>
+
+            <label class="file-drop" for="excel-file">
+              <i data-lucide="upload"></i>
+              <span id="excel-file-name">Выберите .xlsx или .xls</span>
+              <input id="excel-file" type="file" accept=".xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+            </label>
+
+            <button class="primary action-btn" type="button" id="excel-process">
+              <i data-lucide="play"></i>
+              Обработать
+            </button>
+
+            <p class="status" id="excel-status" role="status"></p>
+          </section>
+
+          <section class="tool-panel" aria-labelledby="excel-result-title">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Результат</p>
+                <h2 id="excel-result-title">Файлы</h2>
+              </div>
+              <i data-lucide="download"></i>
+            </div>
+            <div class="download-stack" id="excel-downloads">
+              <p class="muted">После обработки здесь появятся XLSX и PDF.</p>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="schedule-view" data-tab-view="schedule">
+        <div class="layout schedule-grid">
+          <section class="tool-panel" aria-labelledby="new-project-title">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Создание</p>
+                <h2 id="new-project-title">Новый проект</h2>
+              </div>
+              <i data-lucide="plus-circle"></i>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="project-start">Дата начала</label>
+              <input id="project-start" class="text-input" type="text" inputmode="numeric" placeholder="19.12.2026">
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="project-name">Название проекта</label>
+              <input id="project-name" class="text-input" type="text" placeholder="Проект">
+            </div>
+
+            <div class="field">
+              <span class="field-label">Тип графика</span>
+              <div class="segmented" role="radiogroup" aria-label="Тип графика">
+                <button class="segment is-active" type="button" data-new-mode="daily">Подневной</button>
+                <button class="segment" type="button" data-new-mode="weekly">Понедельный</button>
+              </div>
+            </div>
+
+            <button class="primary action-btn" type="button" id="create-project">
+              <i data-lucide="file-plus-2"></i>
+              Создать
+            </button>
+          </section>
+
+          <section class="tool-panel current-project" aria-labelledby="current-project-title">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Проект</p>
+                <h2 id="current-project-title">Текущий</h2>
+              </div>
+              <i data-lucide="folder-open"></i>
+            </div>
+
+            <div class="project-summary" id="project-summary">
+              <p class="muted">Проект не выбран.</p>
+            </div>
+
+            <div class="button-row">
+              <button class="secondary" type="button" data-generate-current="daily">
+                <i data-lucide="calendar"></i>
+                Подневной
+              </button>
+              <button class="secondary" type="button" data-generate-current="weekly">
+                <i data-lucide="calendar-range"></i>
+                Понедельный
+              </button>
+              <button class="danger" type="button" id="delete-project">
+                <i data-lucide="trash-2"></i>
+                Удалить
+              </button>
+            </div>
+
+            <div class="edit-box">
+              <div class="field">
+                <label class="field-label" for="task-select">Процесс</label>
+                <select id="task-select" class="text-input"></select>
+              </div>
+              <div class="edit-row">
+                <div class="segmented compact" role="radiogroup" aria-label="Изменение длительности">
+                  <button class="segment is-active" type="button" data-edit-mode="inc">Увеличить</button>
+                  <button class="segment" type="button" data-edit-mode="dec">Сократить</button>
+                </div>
+                <input id="edit-days" class="text-input days-input" type="number" min="1" step="1" value="3" aria-label="Количество дней">
+                <button class="secondary icon-only" type="button" id="apply-edit" aria-label="Применить">
+                  <i data-lucide="check"></i>
+                </button>
+              </div>
+            </div>
+
+            <p class="status" id="schedule-status" role="status"></p>
+            <div class="download-stack schedule-downloads" id="schedule-downloads"></div>
+          </section>
+
+          <section class="tool-panel history-panel" aria-labelledby="history-title">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">История</p>
+                <h2 id="history-title">Проекты</h2>
+              </div>
+              <i data-lucide="history"></i>
+            </div>
+            <div class="history-list" id="history-list"></div>
+          </section>
+
+          <section class="tool-panel preview-panel" aria-labelledby="preview-title">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Расчёт</p>
+                <h2 id="preview-title">Процессы</h2>
+              </div>
+              <i data-lucide="list-checks"></i>
+            </div>
+            <div class="task-preview" id="task-preview"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script defer src="vendor/lucide.min.js"></script>
+    <script defer src="vendor/xlsx.full.min.js"></script>
+    <script defer src="vendor/exceljs.min.js"></script>
+    <script defer src="vendor/pdfmake.min.js"></script>
+    <script defer src="vendor/vfs_fonts.js"></script>
+    <script defer src="app.js"></script>
+  </body>
+</html>
