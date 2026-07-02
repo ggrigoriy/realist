@@ -156,7 +156,7 @@
 
   async function processExcel() {
     try {
-      requireLibs(["XLSX", "ExcelJS", "pdfMake"]);
+      requireLibs(["XLSX", "ExcelJS"]);
       const file = els.excelFile.files && els.excelFile.files[0];
       if (!file) {
         setStatus(els.excelStatus, "Выберите Excel файл.", "error");
@@ -177,7 +177,6 @@
 
       els.excelDownloads.innerHTML = "";
       renderDownload(result.excelBlob, result.excelName, "XLSX", els.excelDownloads);
-      renderDownload(result.pdfBlob, result.pdfName, "PDF", els.excelDownloads);
       setStatus(els.excelStatus, "Файл успешно отформатирован.", "ok");
       hydrateIcons();
     } catch (error) {
@@ -210,13 +209,10 @@
     addRows(sheet, rows);
     styleBelomorSheet(sheet, rows);
     const excelBlob = await workbookToBlob(workbook);
-    const pdfBlob = await rowsToPdfBlob(rows, "belomor");
     const baseName = `Беломор_${todayRu()}`;
     return {
       excelBlob,
-      pdfBlob,
-      excelName: `${baseName}.xlsx`,
-      pdfName: `${baseName}.pdf`
+      excelName: `${baseName}.xlsx`
     };
   }
 
@@ -311,13 +307,10 @@
     addRows(sheet, rows);
     styleVvodSheet(sheet, rows);
     const excelBlob = await workbookToBlob(workbook);
-    const pdfBlob = await rowsToPdfBlob(rows, "vvod");
     const baseName = `Ввод_в_строй_${todayRu()}`;
     return {
       excelBlob,
-      pdfBlob,
-      excelName: `${baseName}.xlsx`,
-      pdfName: `${baseName}.pdf`
+      excelName: `${baseName}.xlsx`
     };
   }
 
@@ -431,51 +424,6 @@
         footer: 0.3 / 2.54
       }
     };
-  }
-
-  async function rowsToPdfBlob(rows, mode) {
-    if (!window.pdfMake) {
-      throw new Error("Библиотека PDF не загрузилась.");
-    }
-    const maxCol = Math.max(1, ...rows.map((row) => row.length));
-    const normalized = normalizeRows(rows).map((row) => normalizeRow(row, maxCol));
-    const tableRows = normalized.map((row, rowIndex) => {
-      return row.map((value) => {
-        const text = truncate(isBlank(value) ? "" : String(value), rowIndex === 0 ? 20 : 50);
-        return rowIndex === 0
-          ? { text, bold: true, fillColor: "#e7edf7", alignment: "center" }
-          : { text, alignment: "center" };
-      });
-    });
-    const baseWidths = mode === "belomor" ? [36, 70, 38, 62, 150, 40] : [];
-    const widths = Array.from({ length: maxCol }, (_, index) => baseWidths[index] || "*");
-    const definition = {
-      pageOrientation: mode === "belomor" ? "portrait" : "landscape",
-      pageMargins: [18, 18, 18, 18],
-      defaultStyle: { fontSize: 7 },
-      content: [
-        {
-          table: {
-            headerRows: 1,
-            widths,
-            body: tableRows
-          },
-          layout: {
-            hLineColor: () => "#9ca3af",
-            vLineColor: () => "#9ca3af",
-            hLineWidth: () => 0.5,
-            vLineWidth: () => 0.5,
-            paddingLeft: () => 3,
-            paddingRight: () => 3,
-            paddingTop: () => 3,
-            paddingBottom: () => 3
-          }
-        }
-      ]
-    };
-    return new Promise((resolve) => {
-      window.pdfMake.createPdf(definition).getBlob(resolve);
-    });
   }
 
   function renderDownload(blob, fileName, label, container) {
@@ -1301,10 +1249,6 @@
       dividend = Math.floor((dividend - modulo) / 26);
     }
     return letter;
-  }
-
-  function truncate(value, limit) {
-    return value.length > limit ? `${value.slice(0, limit - 3)}...` : value;
   }
 
   function pad2(value) {
