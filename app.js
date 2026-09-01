@@ -197,7 +197,8 @@
       header: 1,
       defval: null,
       blankrows: true,
-      raw: false
+      raw: false,
+      dateNF: "dd.mm.yyyy"
     });
     return normalizeRows(rows.length ? rows : [[]]);
   }
@@ -233,6 +234,13 @@
       });
     }
 
+    const deadlineIndex = findHeaderIndex(rows[0], "дедлайн");
+    if (deadlineIndex >= 0) {
+      for (let i = 1; i < rows.length; i += 1) {
+        rows[i][deadlineIndex] = normalizeDeadlineDate(rows[i][deadlineIndex]);
+      }
+    }
+
     let performerIndex = findHeaderIndex(rows[0], "исполн");
     if (performerIndex < 0) {
       performerIndex = 4;
@@ -256,6 +264,7 @@
     const maxRow = rows.length;
     const maxCol = Math.max(1, ...rows.map((row) => row.length));
     const performerCol = Math.max(1, findHeaderIndex(rows[0], "исполн") + 1 || 5);
+    const deadlineCol = findHeaderIndex(rows[0], "дедлайн") + 1;
 
     [13, 30, 10, 17, 143, 11].forEach((width, index) => {
       sheet.getColumn(index + 1).width = width;
@@ -283,6 +292,9 @@
       row.getCell(3).alignment = { horizontal: "center", vertical: "middle", wrapText: true };
       row.getCell(4).alignment = { horizontal: "left", vertical: "middle", wrapText: true };
       row.getCell(performerCol).alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+      if (deadlineCol > 0 && rowNum > 1) {
+        row.getCell(deadlineCol).numFmt = "dd.mm.yyyy";
+      }
     }
 
     for (let rowNum = 2; rowNum <= maxRow; rowNum += 1) {
@@ -1011,6 +1023,33 @@
     return String(value).trim().replace(/(?<!\s)\(/, " (");
   }
 
+  function normalizeDeadlineDate(value) {
+    if (value instanceof Date) {
+      return formatRuDate(value);
+    }
+    if (isBlank(value)) {
+      return value;
+    }
+
+    const text = String(value).trim();
+    const ruMatch = /^(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})$/.exec(text);
+    if (ruMatch) {
+      return `${pad2(ruMatch[1])}.${pad2(ruMatch[2])}.${normalizeYear(ruMatch[3])}`;
+    }
+
+    const isoMatch = /^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s].*)?$/.exec(text);
+    if (isoMatch) {
+      return `${pad2(isoMatch[3])}.${pad2(isoMatch[2])}.${isoMatch[1]}`;
+    }
+
+    const usMatch = /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/.exec(text);
+    if (usMatch) {
+      return `${pad2(usMatch[2])}.${pad2(usMatch[1])}.${normalizeYear(usMatch[3])}`;
+    }
+
+    return value;
+  }
+
   function findHeaderIndex(headerRow, needle) {
     const lowerNeedle = needle.toLowerCase();
     return headerRow.findIndex((value) => typeof value === "string" && value.toLowerCase().includes(lowerNeedle));
@@ -1253,6 +1292,15 @@
 
   function pad2(value) {
     return String(value).padStart(2, "0");
+  }
+
+  function normalizeYear(value) {
+    const text = String(value);
+    if (text.length === 4) {
+      return text;
+    }
+    const year = Number(text);
+    return String(year >= 70 ? 1900 + year : 2000 + year);
   }
 
   function formatBytes(bytes) {
