@@ -330,7 +330,11 @@
     const maxRow = Math.max(1, rows.length);
     const maxCol = Math.max(1, ...rows.map((row) => row.length));
 
-    for (let rowNum = 1; rowNum <= 65; rowNum += 1) {
+    const highlightRows = Math.min(maxRow, 65);
+    for (let rowNum = 1; rowNum <= highlightRows; rowNum += 1) {
+      if (!rowHasData(rows[rowNum - 1])) {
+        continue;
+      }
       const row = sheet.getRow(rowNum);
       for (let colNum = 1; colNum <= 23; colNum += 1) {
         const cell = row.getCell(colNum);
@@ -1265,6 +1269,10 @@
 
   function isBlank(value) {
     return value === null || value === undefined || String(value).trim() === "";
+  }
+
+  function rowHasData(row) {
+    return Array.isArray(row) && row.some((value) => !isBlank(value));
   }
 
   function setFill(cell, color) {
