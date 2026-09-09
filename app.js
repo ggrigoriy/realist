@@ -237,7 +237,7 @@
     const deadlineIndex = findHeaderIndex(rows[0], "дедлайн");
     if (deadlineIndex >= 0) {
       for (let i = 1; i < rows.length; i += 1) {
-        rows[i][deadlineIndex] = normalizeDeadlineDate(rows[i][deadlineIndex]);
+        rows[i][deadlineIndex] = normalizeRuDateValue(rows[i][deadlineIndex]);
       }
     }
 
@@ -311,7 +311,7 @@
   }
 
   async function buildVvodFiles(inputRows) {
-    const rows = normalizeRows(inputRows);
+    const rows = normalizeDateValues(normalizeRows(inputRows));
     const workbook = new window.ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Sheet0", {
       views: [{ state: "frozen", ySplit: 1 }]
@@ -1023,7 +1023,16 @@
     return String(value).trim().replace(/(?<!\s)\(/, " (");
   }
 
-  function normalizeDeadlineDate(value) {
+  function normalizeDateValues(rows) {
+    return rows.map((row, rowIndex) => {
+      if (rowIndex === 0) {
+        return row;
+      }
+      return row.map((value) => normalizeRuDateValue(value));
+    });
+  }
+
+  function normalizeRuDateValue(value) {
     if (value instanceof Date) {
       return formatRuDate(value);
     }
